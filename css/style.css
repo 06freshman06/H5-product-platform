@@ -17,7 +17,9 @@ body {
   color: #fff; height: 50px;
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 50px; padding: 0 15px; }
-.logo { font-size: 16px; font-weight: bold; cursor: pointer; }
+.logo { font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.logo-img { height: 32px; width: auto; max-width: 120px; object-fit: contain; border-radius: 4px; }
+.hero-logo { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.15); }
 .header-right { display: flex; gap: 15px; align-items: center; }
 .phone-btn { font-size: 13px; cursor: pointer; }
 .admin-entrance { font-size: 12px; opacity: 0.7; cursor: pointer; }
@@ -35,11 +37,19 @@ body {
   position: relative; height: 200px; overflow: hidden;
   background: linear-gradient(135deg, #e74c1f 0%, #ff6b35 50%, #ff9500 100%);
 }
-.hero-bg {
-  position: absolute; inset: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect fill="%23ffffff" opacity="0.05" width="400" height="200"/></svg>');
+.hero-bg-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
 }
-.hero-content { position: relative; z-index: 1; padding: 30px 20px; color: #fff; }
+.hero-bg-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(135deg, rgba(231,76,31,0.75) 0%, rgba(255,107,53,0.65) 50%, rgba(255,149,0,0.55) 100%);
+}
+.hero-content { position: relative; z-index: 2; padding: 30px 20px; color: #fff; }
+.hero-logo {
+  width: 48px; height: 48px; object-fit: contain; border-radius: 8px;
+  background: rgba(255,255,255,0.9); padding: 4px; margin-bottom: 8px;
+}
 .hero-content h1 { font-size: 22px; margin-bottom: 8px; }
 .hero-content p { font-size: 13px; opacity: 0.9; margin-bottom: 20px; }
 .hero-btns { display: flex; gap: 10px; }
