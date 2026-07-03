@@ -149,15 +149,26 @@
         <h3>🏪 店铺基础信息</h3>
         <div class="form-row"><label>店铺名称</label><input type="text" id="cfg-shopName"></div>
         <div class="form-row">
-          <label>店铺Logo图片（上传后显示在顶部导航栏和首页横幅）</label>
+          <label>顶部导航栏Logo</label>
           <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-            <img id="cfg-logo-preview" style="width:60px;height:60px;object-fit:contain;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <img id="cfg-logo-preview" style="width:60px;height:32px;object-fit:contain;border-radius:4px;border:1px solid #eee;background:#f0f0f0;" src="">
             <button class="btn-sm" onclick="document.getElementById('cfg-logo-file').click()">上传Logo</button>
-            <button class="btn-sm-gray" onclick="clearLogo()">清除Logo</button>
+            <button class="btn-sm-gray" onclick="clearLogo()">清除</button>
             <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
           </div>
           <input type="hidden" id="cfg-logoUrl">
-          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用正方形或横版Logo，PNG透明底最佳。上传后自动显示在导航栏和首页。</p>
+          <p style="font-size:11px;color:#999;margin-top:4px;">导航栏显示，建议横版Logo，高32px，宽不超过120px，PNG透明底最佳。</p>
+        </div>
+        <div class="form-row">
+          <label>首页横幅Logo（大图）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <img id="cfg-heroLogo-preview" style="width:60px;height:60px;object-fit:contain;border-radius:8px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <button class="btn-sm" onclick="document.getElementById('cfg-heroLogo-file').click()">上传Logo</button>
+            <button class="btn-sm-gray" onclick="clearHeroLogo()">清除</button>
+            <input type="file" id="cfg-heroLogo-file" accept="image/*" style="display:none" onchange="uploadHeroLogo(this)">
+          </div>
+          <input type="hidden" id="cfg-heroLogoUrl">
+          <p style="font-size:11px;color:#999;margin-top:4px;">首页横幅顶部展示，建议正方形Logo，200×200以上，PNG透明底最佳。</p>
         </div>
         <div class="form-row">
           <label>首页横幅背景图（上传后替换橙色背景，建议宽>750px，高>300px）</label>
@@ -707,6 +718,8 @@ function loadConfigForm() {
   document.getElementById('cfg-shopName').value = config.shopName || '';
   document.getElementById('cfg-logoUrl').value = config.logoUrl || '';
   document.getElementById('cfg-logo-preview').src = config.logoUrl || '';
+  document.getElementById('cfg-heroLogoUrl').value = config.heroLogoUrl || '';
+  document.getElementById('cfg-heroLogo-preview').src = config.heroLogoUrl || '';
   document.getElementById('cfg-heroBgImage').value = config.heroBgImage || '';
   document.getElementById('cfg-heroBg-preview').src = config.heroBgImage || '';
   document.getElementById('cfg-heroSlogan').value = config.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
@@ -735,6 +748,23 @@ function clearLogo() {
   document.getElementById('cfg-logoUrl').value = '';
 }
 
+function uploadHeroLogo(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('Logo图片不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('cfg-heroLogo-preview').src = e.target.result;
+    document.getElementById('cfg-heroLogoUrl').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearHeroLogo() {
+  document.getElementById('cfg-heroLogo-preview').src = '';
+  document.getElementById('cfg-heroLogoUrl').value = '';
+}
+
 function uploadHeroBg(input) {
   if (!input.files.length) return;
   const file = input.files[0];
@@ -756,6 +786,7 @@ function saveConfig() {
   const config = {
     shopName: document.getElementById('cfg-shopName').value.trim(),
     logoUrl: document.getElementById('cfg-logoUrl').value.trim(),
+    heroLogoUrl: document.getElementById('cfg-heroLogoUrl').value.trim(),
     heroBgImage: document.getElementById('cfg-heroBgImage').value.trim(),
     heroSlogan: document.getElementById('cfg-heroSlogan').value.trim() || '15年行业经验 · 500+客户信赖 · 正品保障',
     phone: document.getElementById('cfg-phone').value.trim(),

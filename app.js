@@ -3,20 +3,25 @@ let CONFIG = {};
 
 function initConfig() {
   CONFIG = DB.getConfig();
-  // Logo处理
+  // 导航栏Logo
   const logoImg = document.getElementById('logo-img');
   const logoText = document.getElementById('logo-text');
-  const heroLogo = document.getElementById('hero-logo');
   if (CONFIG.logoUrl) {
     logoImg.src = CONFIG.logoUrl;
     logoImg.classList.remove('hidden');
     logoText.classList.add('hidden');
-    heroLogo.src = CONFIG.logoUrl;
-    heroLogo.classList.remove('hidden');
   } else {
     logoImg.classList.add('hidden');
     logoText.classList.remove('hidden');
     logoText.textContent = '🏪 ' + CONFIG.shopName;
+  }
+
+  // 首页横幅Logo（独立于导航栏）
+  const heroLogo = document.getElementById('hero-logo');
+  if (CONFIG.heroLogoUrl) {
+    heroLogo.src = CONFIG.heroLogoUrl;
+    heroLogo.classList.remove('hidden');
+  } else {
     heroLogo.classList.add('hidden');
   }
   // Hero标题与标语
