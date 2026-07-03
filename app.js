@@ -3,8 +3,42 @@ let CONFIG = {};
 
 function initConfig() {
   CONFIG = DB.getConfig();
-  document.getElementById('logo-text').textContent = '🏪 ' + CONFIG.shopName;
+  // Logo处理
+  const logoImg = document.getElementById('logo-img');
+  const logoText = document.getElementById('logo-text');
+  const heroLogo = document.getElementById('hero-logo');
+  if (CONFIG.logoUrl) {
+    logoImg.src = CONFIG.logoUrl;
+    logoImg.classList.remove('hidden');
+    logoText.classList.add('hidden');
+    heroLogo.src = CONFIG.logoUrl;
+    heroLogo.classList.remove('hidden');
+  } else {
+    logoImg.classList.add('hidden');
+    logoText.classList.remove('hidden');
+    logoText.textContent = '🏪 ' + CONFIG.shopName;
+    heroLogo.classList.add('hidden');
+  }
+  // Hero标题与标语
   document.getElementById('hero-title').textContent = CONFIG.shopName;
+  document.title = (CONFIG.shopName || '商用厨具酒店家具') + ' - 产品展示';
+  document.getElementById('hero-slogan').textContent = CONFIG.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
+  // Hero背景图
+  const heroBgImg = document.getElementById('hero-bg-img');
+  if (CONFIG.heroBgImage) {
+    heroBgImg.src = CONFIG.heroBgImage;
+    heroBgImg.classList.remove('hidden');
+  } else {
+    heroBgImg.classList.add('hidden');
+  }
+  // 统计数据
+  const stats = DB.getStats();
+  const statsBar = document.getElementById('stats-bar');
+  if (statsBar) {
+    statsBar.innerHTML = stats.map(s => `
+      <div class="stat-item"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>
+    `).join('');
+  }
   document.getElementById('contact-phone').textContent = CONFIG.phone;
   document.getElementById('contact-wechat').textContent = '点击复制: ' + CONFIG.wechat;
   document.getElementById('contact-address').textContent = CONFIG.address;

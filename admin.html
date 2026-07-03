@@ -148,12 +148,41 @@
       <div class="config-card">
         <h3>🏪 店铺基础信息</h3>
         <div class="form-row"><label>店铺名称</label><input type="text" id="cfg-shopName"></div>
+        <div class="form-row">
+          <label>店铺Logo图片（上传后显示在顶部导航栏和首页横幅）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <img id="cfg-logo-preview" style="width:60px;height:60px;object-fit:contain;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <button class="btn-sm" onclick="document.getElementById('cfg-logo-file').click()">上传Logo</button>
+            <button class="btn-sm-gray" onclick="clearLogo()">清除Logo</button>
+            <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+          </div>
+          <input type="hidden" id="cfg-logoUrl">
+          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用正方形或横版Logo，PNG透明底最佳。上传后自动显示在导航栏和首页。</p>
+        </div>
+        <div class="form-row">
+          <label>首页横幅背景图（上传后替换橙色背景，建议宽>750px，高>300px）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <img id="cfg-heroBg-preview" style="width:100px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <button class="btn-sm" onclick="document.getElementById('cfg-heroBg-file').click()">上传背景图</button>
+            <button class="btn-sm-gray" onclick="clearHeroBg()">清除背景图</button>
+            <input type="file" id="cfg-heroBg-file" accept="image/*" style="display:none" onchange="uploadHeroBg(this)">
+          </div>
+          <input type="hidden" id="cfg-heroBgImage">
+          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用店面、仓库、展厅或产品实拍照片，系统会自动加橙色渐变遮罩，保证文字清晰。</p>
+        </div>
+        <div class="form-row"><label>首页标语（如：15年行业经验 · 500+客户信赖）</label><input type="text" id="cfg-heroSlogan" placeholder="15年行业经验 · 500+客户信赖 · 正品保障"></div>
         <div class="form-row"><label>联系电话</label><input type="text" id="cfg-phone"></div>
         <div class="form-row"><label>微信号</label><input type="text" id="cfg-wechat"></div>
         <div class="form-row"><label>门店地址</label><input type="text" id="cfg-address"></div>
         <div class="form-row"><label>地图链接（腾讯地图，留空则显示地址文字）</label><input type="text" id="cfg-mapUrl" placeholder="https://map.qq.com/..."></div>
         <div class="form-row"><label>管理员密码</label><input type="text" id="cfg-adminPassword"></div>
-        <button class="btn-sm" onclick="saveConfig()">保存设置</button>
+        <button class="btn-sm" onclick="saveConfig()">保存基础信息</button>
+      </div>
+      <div class="config-card">
+        <h3>📊 首页统计数据</h3>
+        <p style="font-size:13px;color:#666;margin-bottom:12px;">修改下方4组数据，首页"年经验/服务客户/在售产品/售后响应"会同步更新。</p>
+        <div id="stats-editor"></div>
+        <button class="btn-sm" onclick="saveStats()">保存统计数据</button>
       </div>
     </div>
     <!-- 备份恢复 -->
@@ -161,7 +190,7 @@
       <div class="backup-card">
         <h3>💾 数据备份与恢复</h3>
         <p>所有数据存储在浏览器本地（localStorage）。建议定期导出备份，防止更换浏览器或清理缓存导致数据丢失。</p>
-        <p><strong>注意：</strong>管理后台修改的数据只在当前浏览器生效。客户用其他手机访问看到的是初始示例数据。如需所有客户看到你修改的数据，需要导出数据后联系技术人员更新到网页代码中。</p>
+        <p><strong>注意：</strong>管理后台修改的数据只在当前浏览器生效。客户用其他手机访问看到的是初始示例数据。如需所有客户看到你修改的数据，需要导出数据后联系技术人员更新到网页代码中。导出内容包括：店铺信息、Logo、首页数据、产品、案例、文章。</p>
         <div class="backup-btns">
           <button class="btn-sm" onclick="exportData()">📥 导出全部数据</button>
           <button class="btn-sm-gray" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
@@ -180,10 +209,16 @@
     <input type="text" id="p-name" placeholder="产品名称*">
     <select id="p-category">
       <option value="">选择分类*</option>
-      <option value="灶具">灶具</option><option value="制冷">制冷设备</option>
-      <option value="加工">加工设备</option><option value="排烟">排烟系统</option>
+      <option value="商用灶具">商用灶具</option><option value="消毒柜">消毒柜</option>
+      <option value="蒸饭柜">蒸饭柜</option><option value="水池">水池</option>
+      <option value="荷台">荷台</option>
+      <option value="西厨">西厨设备</option><option value="早餐炉">早餐炉</option>
+      <option value="面点">面点设备</option><option value="自助餐炉">自助餐炉</option>
+      <option value="厨杂用品">厨杂用品</option>
+      <option value="制冷">制冷设备</option><option value="洗涤">洗涤设备</option>
+      <option value="排烟">排烟系统</option><option value="加工">加工设备</option>
       <option value="餐桌">餐桌</option><option value="餐椅">餐椅/卡座</option>
-      <option value="洗涤">洗涤设备</option><option value="配套">配套用品</option>
+      <option value="配套">配套用品</option>
     </select>
     <input type="text" id="p-price" placeholder="价格（如：2,800-4,500）">
     <input type="text" id="p-unit" placeholder="单位（如：台、张、位）" value="台">
@@ -665,19 +700,64 @@ function deleteInquiry(id) {
 }
 
 // ============ 店铺设置 ============
+let editingStats = [];
+
 function loadConfigForm() {
   const config = DB.getConfig();
   document.getElementById('cfg-shopName').value = config.shopName || '';
+  document.getElementById('cfg-logoUrl').value = config.logoUrl || '';
+  document.getElementById('cfg-logo-preview').src = config.logoUrl || '';
+  document.getElementById('cfg-heroBgImage').value = config.heroBgImage || '';
+  document.getElementById('cfg-heroBg-preview').src = config.heroBgImage || '';
+  document.getElementById('cfg-heroSlogan').value = config.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
   document.getElementById('cfg-phone').value = config.phone || '';
   document.getElementById('cfg-wechat').value = config.wechat || '';
   document.getElementById('cfg-address').value = config.address || '';
   document.getElementById('cfg-mapUrl').value = config.mapUrl || '';
   document.getElementById('cfg-adminPassword').value = config.adminPassword || '';
+  loadStatsEditor();
+}
+
+function uploadLogo(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('Logo图片不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('cfg-logo-preview').src = e.target.result;
+    document.getElementById('cfg-logoUrl').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearLogo() {
+  document.getElementById('cfg-logo-preview').src = '';
+  document.getElementById('cfg-logoUrl').value = '';
+}
+
+function uploadHeroBg(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('横幅背景图不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('cfg-heroBg-preview').src = e.target.result;
+    document.getElementById('cfg-heroBgImage').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearHeroBg() {
+  document.getElementById('cfg-heroBg-preview').src = '';
+  document.getElementById('cfg-heroBgImage').value = '';
 }
 
 function saveConfig() {
   const config = {
     shopName: document.getElementById('cfg-shopName').value.trim(),
+    logoUrl: document.getElementById('cfg-logoUrl').value.trim(),
+    heroBgImage: document.getElementById('cfg-heroBgImage').value.trim(),
+    heroSlogan: document.getElementById('cfg-heroSlogan').value.trim() || '15年行业经验 · 500+客户信赖 · 正品保障',
     phone: document.getElementById('cfg-phone').value.trim(),
     wechat: document.getElementById('cfg-wechat').value.trim(),
     address: document.getElementById('cfg-address').value.trim(),
@@ -685,7 +765,32 @@ function saveConfig() {
     adminPassword: document.getElementById('cfg-adminPassword').value.trim()
   };
   DB.setConfig(config);
-  alert('✅ 保存成功！\n\n注意：此设置只在当前浏览器生效。\n如需所有客户看到修改后的信息，请到"备份恢复"导出数据，然后联系技术人员更新到网页代码中。');
+  alert('✅ 店铺基础信息保存成功！');
+}
+
+function loadStatsEditor() {
+  editingStats = DB.getStats().map(s => ({ ...s }));
+  const container = document.getElementById('stats-editor');
+  container.innerHTML = editingStats.map((s, i) => `
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
+      <span style="font-size:13px;color:#999;width:24px;">${i + 1}</span>
+      <input type="text" id="stat-num-${i}" value="${s.num}" placeholder="数字" style="width:80px;">
+      <input type="text" id="stat-label-${i}" value="${s.label}" placeholder="说明文字" style="flex:1;">
+    </div>
+  `).join('');
+}
+
+function saveStats() {
+  const stats = editingStats.map((s, i) => ({
+    num: document.getElementById(`stat-num-${i}`).value.trim(),
+    label: document.getElementById(`stat-label-${i}`).value.trim()
+  })).filter(s => s.num && s.label);
+  if (stats.length < 4) {
+    alert('请完整填写4组统计数据');
+    return;
+  }
+  DB.setStats(stats);
+  alert('✅ 统计数据保存成功！');
 }
 
 // ============ 备份恢复 ============
@@ -720,9 +825,10 @@ function importData(event) {
 
 function resetData() {
   if (!confirm('确定恢复初始数据吗？这将删除你所有修改！')) return;
-  if (!confirm('再次确认：所有产品、案例、文章、询价将被重置为初始状态！')) return;
+  if (!confirm('再次确认：所有产品、案例、文章、询价、设置将被重置为初始状态！')) return;
   ['products', 'cases', 'knowledge', 'inquiries'].forEach(key => localStorage.removeItem('h5_shop_' + key));
   localStorage.removeItem('h5_shop_config');
+  localStorage.removeItem('h5_shop_stats');
   alert('✅ 已恢复初始数据');
   loadAllAdmin();
 }

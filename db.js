@@ -5,6 +5,9 @@ const DB = {
   // 店铺配置
   config: {
     shopName: '郴州厨具家具',
+    logoUrl: '',
+    heroBgImage: '',
+    heroSlogan: '15年行业经验 · 500+客户信赖 · 正品保障',
     phone: '13800000000',
     wechat: 'czzwcj001',
     address: '湖南省郴州市XX区XX路XX号',
@@ -12,11 +15,19 @@ const DB = {
     adminPassword: 'chenzhou2024'
   },
 
+  // 首页统计数据（可在管理后台修改）
+  stats: [
+    { num: '15', label: '年经验' },
+    { num: '500+', label: '服务客户' },
+    { num: '200+', label: '在售产品' },
+    { num: '24h', label: '售后响应' }
+  ],
+
   // 初始示例数据
   initData: {
     products: [
-      { id: 'p1', name: '商用双眼双温灶', category: '灶具', price: '2,800-4,500', unit: '台', video: '', images: [], specs: { '尺寸': '1800×900×800mm', '功率': '30kW×2', '材质': '201不锈钢', '燃气类型': '天然气/液化气通用' }, description: '高效节能商用双眼灶', descriptionContent: [{ type: 'text', value: '高效节能商用双眼灶，适合中餐厅、食堂等高频使用场景。' }, { type: 'text', value: '核心优势：' }, { type: 'text', value: '🔥 热效率高，火力猛，节能30%以上' }, { type: 'text', value: '🔥 201不锈钢机身，耐用10年+' }, { type: 'text', value: '🔥 天然气/液化气通用，不挑气源' }], featured: true },
-      { id: 'p2', name: '商用四眼煲仔炉', category: '灶具', price: '3,200-5,800', unit: '台', video: '', images: [], specs: { '尺寸': '800×900×800mm', '功率': '8kW×4', '材质': '304不锈钢', '适用场景': '煲仔饭专门店' }, description: '专为煲仔饭店设计', descriptionContent: [{ type: 'text', value: '专为煲仔饭店设计，四眼独立控温，出餐快，受热均匀不糊底。' }, { type: 'text', value: '304不锈钢材质，耐高温耐腐蚀，使用寿命长。' }], featured: true },
+      { id: 'p1', name: '商用双眼双温灶', category: '商用灶具', price: '2,800-4,500', unit: '台', video: '', images: [], specs: { '尺寸': '1800×900×800mm', '功率': '30kW×2', '材质': '201不锈钢', '燃气类型': '天然气/液化气通用' }, description: '高效节能商用双眼灶', descriptionContent: [{ type: 'text', value: '高效节能商用双眼灶，适合中餐厅、食堂等高频使用场景。' }, { type: 'text', value: '核心优势：' }, { type: 'text', value: '🔥 热效率高，火力猛，节能30%以上' }, { type: 'text', value: '🔥 201不锈钢机身，耐用10年+' }, { type: 'text', value: '🔥 天然气/液化气通用，不挑气源' }], featured: true },
+      { id: 'p2', name: '商用四眼煲仔炉', category: '商用灶具', price: '3,200-5,800', unit: '台', video: '', images: [], specs: { '尺寸': '800×900×800mm', '功率': '8kW×4', '材质': '304不锈钢', '适用场景': '煲仔饭专门店' }, description: '专为煲仔饭店设计', descriptionContent: [{ type: 'text', value: '专为煲仔饭店设计，四眼独立控温，出餐快，受热均匀不糊底。' }, { type: 'text', value: '304不锈钢材质，耐高温耐腐蚀，使用寿命长。' }], featured: true },
       { id: 'p3', name: '商用双门冷藏柜', category: '制冷', price: '3,500-6,200', unit: '台', video: '', images: [], specs: { '尺寸': '1200×700×1900mm', '容积': '1000L', '温度范围': '0~10℃', '功率': '320W' }, description: '大功率压缩机冷藏柜', descriptionContent: [{ type: 'text', value: '大功率压缩机，制冷快，保温好。' }, { type: 'text', value: '适合餐厅、酒店后厨食材储存，1000L大容量满足日常需求。' }], featured: true },
       { id: 'p4', name: '商用电热炸炉（双缸）', category: '加工', price: '1,800-3,200', unit: '台', video: '', images: [], specs: { '尺寸': '600×550×350mm', '功率': '6kW×2', '容量': '12L×2', '温控范围': '50~200℃' }, description: '双缸独立控温炸炉', descriptionContent: [{ type: 'text', value: '双缸独立控温，可同时炸不同食材。自动恒温，操作简便，清洗方便。' }], featured: false },
       { id: 'p5', name: '商用油烟净化一体机', category: '排烟', price: '5,800-12,000', unit: '台', video: '', images: [], specs: { '处理风量': '8000m³/h', '净化效率': '≥95%', '功率': '550W', '尺寸': '可定制' }, description: '环保达标油烟净化机', descriptionContent: [{ type: 'text', value: '符合环保排放标准，低空排放无异味。' }, { type: 'text', value: '郴州本地有大量安装案例，可上门测量设计。净化效率≥95%，一次投资长期合规。' }], featured: true },
@@ -63,6 +74,19 @@ const DB = {
   // 保存配置
   setConfig(config) {
     localStorage.setItem('h5_shop_config', JSON.stringify(config));
+  },
+
+  // 获取统计数据
+  getStats() {
+    const saved = localStorage.getItem('h5_shop_stats');
+    if (saved) return JSON.parse(saved);
+    this.setStats(this.stats);
+    return this.stats;
+  },
+
+  // 保存统计数据
+  setStats(stats) {
+    localStorage.setItem('h5_shop_stats', JSON.stringify(stats));
   },
 
   // 产品操作
@@ -164,6 +188,7 @@ const DB = {
   exportAll() {
     return {
       config: this.getConfig(),
+      stats: this.getStats(),
       products: this.getProducts(),
       cases: this.getCases(),
       knowledge: this.getKnowledge(),
@@ -174,6 +199,7 @@ const DB = {
   // 导入数据（恢复用）
   importAll(data) {
     if (data.config) this.setConfig(data.config);
+    if (data.stats) this.setStats(data.stats);
     if (data.products) this.set('products', data.products);
     if (data.cases) this.set('cases', data.cases);
     if (data.knowledge) this.set('knowledge', data.knowledge);

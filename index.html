@@ -9,7 +9,10 @@
 <body>
 <header class="header" id="header">
   <div class="header-inner">
-    <div class="logo" id="logo-text" onclick="goHome()">🏪 郴州厨具家具</div>
+    <div class="logo" id="logo-area" onclick="goHome()">
+      <img id="logo-img" class="logo-img hidden" src="" alt="logo">
+      <span id="logo-text">🏪 郴州厨具家具</span>
+    </div>
     <div class="header-right">
       <span class="phone-btn" onclick="callPhone()">📞 电话</span>
       <span class="admin-entrance" onclick="openAdmin()">管理</span>
@@ -20,22 +23,19 @@
 <!-- 首页 -->
 <div class="page" id="page-home">
   <div class="hero">
-    <div class="hero-bg"></div>
+    <img id="hero-bg-img" class="hero-bg-img" src="" alt="">
+    <div class="hero-bg-overlay"></div>
     <div class="hero-content">
+      <img id="hero-logo" class="hero-logo hidden" src="" alt="logo">
       <h1 id="hero-title">郴州商用厨具·酒店家具</h1>
-      <p>15年行业经验 · 500+客户信赖 · 正品保障</p>
+      <p id="hero-slogan">15年行业经验 · 500+客户信赖 · 正品保障</p>
       <div class="hero-btns">
         <button class="btn btn-white" onclick="switchPage('products')">查看产品</button>
         <button class="btn btn-outline-white" onclick="switchPage('cases')">成功案例</button>
       </div>
     </div>
   </div>
-  <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">15</div><div class="stat-label">年经验</div></div>
-    <div class="stat-item"><div class="stat-num">500+</div><div class="stat-label">服务客户</div></div>
-    <div class="stat-item"><div class="stat-num">200+</div><div class="stat-label">在售产品</div></div>
-    <div class="stat-item"><div class="stat-num">24h</div><div class="stat-label">售后响应</div></div>
-  </div>
+  <div class="stats-bar" id="stats-bar"></div>
   <div class="quick-entry">
     <div class="section-title">快捷入口</div>
     <div class="quick-grid">
