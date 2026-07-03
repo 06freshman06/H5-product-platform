@@ -28,14 +28,11 @@ function initConfig() {
   document.getElementById('hero-title').textContent = CONFIG.shopName;
   document.title = (CONFIG.shopName || '商用厨具酒店家具') + ' - 产品展示';
   document.getElementById('hero-slogan').textContent = CONFIG.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
-  // Hero背景图
-  const heroBgImg = document.getElementById('hero-bg-img');
-  if (CONFIG.heroBgImage) {
-    heroBgImg.src = CONFIG.heroBgImage;
-    heroBgImg.classList.remove('hidden');
-  } else {
-    heroBgImg.classList.add('hidden');
-  }
+  // Hero背景图轮播
+  const heroBgs = CONFIG.heroBgs || [];
+  // 兼容旧版单图数据
+  const bgImages = heroBgs.length > 0 ? heroBgs : (CONFIG.heroBgImage ? [CONFIG.heroBgImage] : []);
+  initHeroCarousel(bgImages);
   // 统计数据
   const stats = DB.getStats();
   const statsBar = document.getElementById('stats-bar');
@@ -47,6 +44,87 @@ function initConfig() {
   document.getElementById('contact-phone').textContent = CONFIG.phone;
   document.getElementById('contact-wechat').textContent = '点击复制: ' + CONFIG.wechat;
   document.getElementById('contact-address').textContent = CONFIG.address;
+}
+
+// ============ 首页横幅轮播 ============
+let heroCarouselTimer = null;
+let heroCarouselIdx = 0;
+
+function initHeroCarousel(images) {
+  const carousel = document.getElementById('hero-bg-carousel');
+  const dots = document.getElementById('hero-bg-dots');
+  if (!carousel || !dots) return;
+  
+  // 停止旧定时器
+  if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+  heroCarouselIdx = 0;
+
+  if (!images.length) {
+    carousel.innerHTML = '';
+    dots.innerHTML = '';
+    return;
+  }
+
+  // 渲染幻灯片
+  carousel.innerHTML = images.map((src, i) =>
+    `<div class="hero-bg-slide ${i === 0 ? 'active' : ''}" style="background-image:url(${src})"></div>`
+  ).join('');
+
+  // 渲染指示点
+  if (images.length > 1) {
+    dots.innerHTML = images.map((_, i) =>
+      `<span class="hero-bg-dot ${i === 0 ? 'active' : ''}" data-idx="${i}"></span>`
+    ).join('');
+    dots.querySelectorAll('.hero-bg-dot').forEach(dot => {
+      dot.addEventListener('click', function() {
+        goHeroSlide(parseInt(this.dataset.idx), images.length);
+      });
+    });
+  } else {
+    dots.innerHTML = '';
+  }
+
+  // 自动播放
+  if (images.length > 1) {
+    startHeroAutoPlay(images.length);
+  }
+
+  // 触摸滑动
+  let touchStartX = 0, touchEndX = 0;
+  carousel.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    stopHeroAutoPlay();
+  }, { passive: true });
+  carousel.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goHeroSlide((heroCarouselIdx + 1) % images.length, images.length);
+      else goHeroSlide((heroCarouselIdx - 1 + images.length) % images.length, images.length);
+    }
+    startHeroAutoPlay(images.length);
+  });
+}
+
+function goHeroSlide(idx, total) {
+  heroCarouselIdx = idx;
+  document.querySelectorAll('.hero-bg-slide').forEach((s, i) => {
+    s.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.hero-bg-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+function startHeroAutoPlay(total) {
+  stopHeroAutoPlay();
+  heroCarouselTimer = setInterval(() => {
+    goHeroSlide((heroCarouselIdx + 1) % total, total);
+  }, 4000);
+}
+
+function stopHeroAutoPlay() {
+  if (heroCarouselTimer) { clearInterval(heroCarouselTimer); heroCarouselTimer = null; }
 }
 
 // ============ 页面路由 ============

@@ -7,7 +7,7 @@ const DB = {
     shopName: '郴州厨具家具',
     logoUrl: '',
     heroLogoUrl: '',
-    heroBgImage: '',
+    heroBgs: [],  // 首页横幅多图轮播
     heroSlogan: '15年行业经验 · 500+客户信赖 · 正品保障',
     phone: '13800000000',
     wechat: 'czzwcj001',

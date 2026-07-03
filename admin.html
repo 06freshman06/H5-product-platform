@@ -171,15 +171,13 @@
           <p style="font-size:11px;color:#999;margin-top:4px;">首页横幅顶部展示，建议正方形Logo，200×200以上，PNG透明底最佳。</p>
         </div>
         <div class="form-row">
-          <label>首页横幅背景图（上传后替换橙色背景，建议宽>750px，高>300px）</label>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-            <img id="cfg-heroBg-preview" style="width:100px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
-            <button class="btn-sm" onclick="document.getElementById('cfg-heroBg-file').click()">上传背景图</button>
-            <button class="btn-sm-gray" onclick="clearHeroBg()">清除背景图</button>
-            <input type="file" id="cfg-heroBg-file" accept="image/*" style="display:none" onchange="uploadHeroBg(this)">
+          <label>首页横幅背景图轮播（可放多张，自动轮播，手指可滑动切换）</label>
+          <div id="cfg-heroBgs-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+          <div style="margin-top:8px;">
+            <button class="btn-sm" onclick="addHeroBg()">＋ 添加背景图</button>
           </div>
-          <input type="hidden" id="cfg-heroBgImage">
-          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用店面、仓库、展厅或产品实拍照片，系统会自动加橙色渐变遮罩，保证文字清晰。</p>
+          <input type="file" id="cfg-heroBg-file" accept="image/*" style="display:none" onchange="onHeroBgFilePicked(this)">
+          <p style="font-size:11px;color:#999;margin-top:4px;">建议每张图片宽>750px、高>300px，每次最多2MB。可添加店面、仓库、展厅或产品实拍照片，系统会自动加橙色渐变遮罩保证文字清晰。</p>
         </div>
         <div class="form-row"><label>首页标语（如：15年行业经验 · 500+客户信赖）</label><input type="text" id="cfg-heroSlogan" placeholder="15年行业经验 · 500+客户信赖 · 正品保障"></div>
         <div class="form-row"><label>联系电话</label><input type="text" id="cfg-phone"></div>
@@ -720,8 +718,8 @@ function loadConfigForm() {
   document.getElementById('cfg-logo-preview').src = config.logoUrl || '';
   document.getElementById('cfg-heroLogoUrl').value = config.heroLogoUrl || '';
   document.getElementById('cfg-heroLogo-preview').src = config.heroLogoUrl || '';
-  document.getElementById('cfg-heroBgImage').value = config.heroBgImage || '';
-  document.getElementById('cfg-heroBg-preview').src = config.heroBgImage || '';
+  heroBgsData = config.heroBgs || (config.heroBgImage ? [config.heroBgImage] : []);
+  renderHeroBgsList();
   document.getElementById('cfg-heroSlogan').value = config.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
   document.getElementById('cfg-phone').value = config.phone || '';
   document.getElementById('cfg-wechat').value = config.wechat || '';
@@ -765,21 +763,45 @@ function clearHeroLogo() {
   document.getElementById('cfg-heroLogoUrl').value = '';
 }
 
-function uploadHeroBg(input) {
-  if (!input.files.length) return;
-  const file = input.files[0];
-  if (file.size > 2 * 1024 * 1024) { alert('横幅背景图不能超过2MB'); return; }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('cfg-heroBg-preview').src = e.target.result;
-    document.getElementById('cfg-heroBgImage').value = e.target.result;
-  };
-  reader.readAsDataURL(file);
+// ============ 首页横幅多图管理 ============
+let heroBgsData = [];
+
+function renderHeroBgsList() {
+  const container = document.getElementById('cfg-heroBgs-list');
+  if (!heroBgsData.length) {
+    container.innerHTML = '<div style="font-size:12px;color:#999;padding:8px 0;">暂无背景图，上方横幅将显示橙色渐变色</div>';
+    return;
+  }
+  container.innerHTML = heroBgsData.map((src, i) => `
+    <div style="position:relative;width:100px;height:60px;border-radius:6px;overflow:hidden;border:2px solid ${i===0?'#e74c1f':'#eee'};">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover;">
+      <span onclick="removeHeroBg(${i})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,0.6);color:#fff;border-radius:50%;text-align:center;line-height:18px;font-size:12px;cursor:pointer;">×</span>
+      ${i === 0 ? '<span style="position:absolute;bottom:2px;left:2px;background:#e74c1f;color:#fff;font-size:10px;padding:1px 4px;border-radius:3px;">第一张</span>' : ''}
+    </div>
+  `).join('');
 }
 
-function clearHeroBg() {
-  document.getElementById('cfg-heroBg-preview').src = '';
-  document.getElementById('cfg-heroBgImage').value = '';
+function addHeroBg() {
+  document.getElementById('cfg-heroBg-file').click();
+}
+
+function onHeroBgFilePicked(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('背景图不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    heroBgsData.push(e.target.result);
+    renderHeroBgsList();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeHeroBg(idx) {
+  if (!confirm('确定删除这张背景图吗？')) return;
+  heroBgsData.splice(idx, 1);
+  renderHeroBgsList();
 }
 
 function saveConfig() {
@@ -787,7 +809,7 @@ function saveConfig() {
     shopName: document.getElementById('cfg-shopName').value.trim(),
     logoUrl: document.getElementById('cfg-logoUrl').value.trim(),
     heroLogoUrl: document.getElementById('cfg-heroLogoUrl').value.trim(),
-    heroBgImage: document.getElementById('cfg-heroBgImage').value.trim(),
+    heroBgs: heroBgsData,
     heroSlogan: document.getElementById('cfg-heroSlogan').value.trim() || '15年行业经验 · 500+客户信赖 · 正品保障',
     phone: document.getElementById('cfg-phone').value.trim(),
     wechat: document.getElementById('cfg-wechat').value.trim(),
