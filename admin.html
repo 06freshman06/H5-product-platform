@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 - 郴州厨具家具</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.login-box{max-width:400px;margin:80px auto;background:#fff;border-radius:16px;padding:30px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.login-box h2{text-align:center;margin-bottom:20px;color:#e74c1f;}
+.login-box input{width:100%;padding:12px;border:1px solid #eee;border-radius:8px;font-size:15px;margin-bottom:15px;outline:none;}
+.login-box input:focus{border-color:#e74c1f;}
+.login-box button{width:100%;padding:12px;background:#e74c1f;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;}
+.login-box .error{color:#e74c1f;font-size:13px;margin-bottom:10px;text-align:center;}
+.admin-header{background:linear-gradient(135deg,#e74c1f,#ff6b35);color:#fff;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.admin-header h2{font-size:16px;}
+.admin-header button{background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;}
+.admin-tabs{display:flex;background:#fff;border-bottom:1px solid #eee;overflow-x:auto;}
+.admin-tabs::-webkit-scrollbar{display:none;}
+.admin-tab{flex-shrink:0;padding:12px 18px;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;white-space:nowrap;}
+.admin-tab.active{color:#e74c1f;border-bottom-color:#e74c1f;font-weight:bold;}
+.admin-content{padding:15px;}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.btn-sm{background:#e74c1f;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;}
+.btn-sm-gray{background:#f0f0f0;color:#666;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;}
+.btn-sm-danger{background:#ff4444;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
+.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px;}
+.data-table th{background:#f8f8f8;padding:10px 8px;text-align:left;font-size:12px;color:#999;}
+.data-table td{padding:10px 8px;border-bottom:1px solid #f0f0f0;}
+.data-table tr:last-child td{border-bottom:none;}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;}
+.modal{background:#fff;border-radius:16px;padding:20px;width:95%;max-width:550px;max-height:85vh;overflow-y:auto;}
+.modal h3{font-size:16px;margin-bottom:15px;}
+.modal input,.modal select,.modal textarea{width:100%;padding:10px;border:1px solid #eee;border-radius:8px;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit;}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:#e74c1f;}
+.modal textarea{resize:vertical;}
+.modal-btns{display:flex;gap:10px;margin-top:15px;}
+.spec-row{display:flex;gap:8px;margin-bottom:8px;}
+.spec-row input{flex:1;}
+.spec-row button{background:#ff4444;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap;}
+.empty-tip{text-align:center;padding:40px;color:#999;font-size:14px;}
+.img-preview{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.img-preview img{width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #eee;}
+.img-preview .img-item{position:relative;}
+.img-preview .img-del{position:absolute;top:-6px;right:-6px;background:#ff4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.search-bar{margin-bottom:15px;}
+.search-bar input{width:100%;padding:10px 12px;border:1px solid #eee;border-radius:8px;font-size:14px;outline:none;}
+.search-bar input:focus{border-color:#e74c1f;}
+.config-card{background:#fff;border-radius:12px;padding:20px;margin-bottom:15px;}
+.config-card h3{margin-bottom:15px;font-size:16px;}
+.config-card .form-row{margin-bottom:12px;}
+.config-card label{display:block;font-size:13px;color:#999;margin-bottom:4px;}
+.config-card input{width:100%;padding:10px;border:1px solid #eee;border-radius:8px;font-size:14px;outline:none;}
+.config-card input:focus{border-color:#e74c1f;}
+.backup-card{background:#fff;border-radius:12px;padding:20px;}
+.backup-card h3{margin-bottom:15px;font-size:16px;}
+.backup-card p{font-size:13px;color:#666;margin-bottom:10px;line-height:1.6;}
+.backup-btns{display:flex;gap:10px;flex-wrap:wrap;}
+/* 图文内容编辑器样式 */
+.desc-editor{margin-bottom:10px;border:1px solid #eee;border-radius:8px;padding:10px;background:#f9f9f9;}
+.desc-editor-item{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.desc-editor-item textarea{flex:1;min-height:36px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;outline:none;font-family:inherit;}
+.desc-editor-item textarea:focus{border-color:#e74c1f;}
+.desc-editor-item img{width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;}
+.desc-editor-item .type-badge{font-size:11px;padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+.desc-editor-item .type-badge.text{background:#e8f5e9;color:#2e7d32;}
+.desc-editor-item .type-badge.image{background:#fff3e0;color:#e65100;}
+.desc-editor-item .del-btn{background:#ff4444;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;flex-shrink:0;}
+.desc-editor-btns{display:flex;gap:8px;margin-top:8px;}
+.desc-editor-btns button{padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;border:none;}
+.desc-editor-btns .add-text{background:#e8f5e9;color:#2e7d32;}
+.desc-editor-btns .add-image{background:#fff3e0;color:#e65100;}
+.desc-editor-btns .move-up{background:#e3f2fd;color:#1565c0;}
+.desc-editor-btns .move-down{background:#fce4ec;color:#c62828;}
+.video-input-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;}
+.video-input-row input{flex:1;}
+.video-input-row .clear-btn{background:#ff4444;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0;}
+@media(min-width:768px){.admin-content{max-width:1000px;margin:0 auto;}}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login-page">
+  <div class="login-box">
+    <h2>🔒 管理后台登录</h2>
+    <div class="error" id="login-error"></div>
+    <input type="password" id="login-password" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">登录</button>
+    <p style="text-align:center;font-size:12px;color:#999;margin-top:15px;">默认密码：chenzhou2024<br>登录后请及时修改</p>
+  </div>
+</div>
+
+<!-- 管理后台 -->
+<div id="admin-page" style="display:none;">
+  <div class="admin-header">
+    <h2>⚙️ 管理后台</h2>
+    <div>
+      <button onclick="window.open('index.html','_blank')" style="margin-right:8px;">预览前台</button>
+      <button onclick="doLogout()">退出</button>
+    </div>
+  </div>
+  <div class="admin-tabs">
+    <div class="admin-tab active" onclick="switchAdminTab('products',this)">📦 产品管理</div>
+    <div class="admin-tab" onclick="switchAdminTab('cases',this)">📋 案例管理</div>
+    <div class="admin-tab" onclick="switchAdminTab('knowledge',this)">📚 知识管理</div>
+    <div class="admin-tab" onclick="switchAdminTab('inquiries',this)">💬 询价管理</div>
+    <div class="admin-tab" onclick="switchAdminTab('config',this)">⚙️ 店铺设置</div>
+    <div class="admin-tab" onclick="switchAdminTab('backup',this)">💾 备份恢复</div>
+  </div>
+  <div class="admin-content">
+    <!-- 产品管理 -->
+    <div class="admin-section active" id="tab-products">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <div></div>
+        <button class="btn-sm" onclick="openProductModal()">＋ 添加产品</button>
+      </div>
+      <div class="search-bar"><input type="text" placeholder="搜索产品名称..." id="search-products" oninput="renderAdminProducts()"></div>
+      <div id="admin-products-list"></div>
+      <div class="empty-tip" id="admin-products-empty" style="display:none;">暂无产品，点击"添加产品"</div>
+    </div>
+    <!-- 案例管理 -->
+    <div class="admin-section" id="tab-cases">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <div></div>
+        <button class="btn-sm" onclick="openCaseModal()">＋ 添加案例</button>
+      </div>
+      <div id="admin-cases-list"></div>
+      <div class="empty-tip" id="admin-cases-empty" style="display:none;">暂无案例</div>
+    </div>
+    <!-- 知识管理 -->
+    <div class="admin-section" id="tab-knowledge">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <div></div>
+        <button class="btn-sm" onclick="openKnowledgeModal()">＋ 添加文章</button>
+      </div>
+      <div id="admin-knowledge-list"></div>
+      <div class="empty-tip" id="admin-knowledge-empty" style="display:none;">暂无文章</div>
+    </div>
+    <!-- 询价管理 -->
+    <div class="admin-section" id="tab-inquiries">
+      <div id="admin-inquiries-list"></div>
+      <div class="empty-tip" id="admin-inquiries-empty" style="display:none;">暂无询价记录</div>
+    </div>
+    <!-- 店铺设置 -->
+    <div class="admin-section" id="tab-config">
+      <div class="config-card">
+        <h3>🏪 店铺基础信息</h3>
+        <div class="form-row"><label>店铺名称</label><input type="text" id="cfg-shopName"></div>
+        <div class="form-row">
+          <label>店铺Logo图片（上传后显示在顶部导航栏和首页横幅）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <img id="cfg-logo-preview" style="width:60px;height:60px;object-fit:contain;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <button class="btn-sm" onclick="document.getElementById('cfg-logo-file').click()">上传Logo</button>
+            <button class="btn-sm-gray" onclick="clearLogo()">清除Logo</button>
+            <input type="file" id="cfg-logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+          </div>
+          <input type="hidden" id="cfg-logoUrl">
+          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用正方形或横版Logo，PNG透明底最佳。上传后自动显示在导航栏和首页。</p>
+        </div>
+        <div class="form-row">
+          <label>首页横幅背景图（上传后替换橙色背景，建议宽>750px，高>300px）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <img id="cfg-heroBg-preview" style="width:100px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #eee;background:#f0f0f0;" src="">
+            <button class="btn-sm" onclick="document.getElementById('cfg-heroBg-file').click()">上传背景图</button>
+            <button class="btn-sm-gray" onclick="clearHeroBg()">清除背景图</button>
+            <input type="file" id="cfg-heroBg-file" accept="image/*" style="display:none" onchange="uploadHeroBg(this)">
+          </div>
+          <input type="hidden" id="cfg-heroBgImage">
+          <p style="font-size:11px;color:#999;margin-top:4px;">建议使用店面、仓库、展厅或产品实拍照片，系统会自动加橙色渐变遮罩，保证文字清晰。</p>
+        </div>
+        <div class="form-row"><label>首页标语（如：15年行业经验 · 500+客户信赖）</label><input type="text" id="cfg-heroSlogan" placeholder="15年行业经验 · 500+客户信赖 · 正品保障"></div>
+        <div class="form-row"><label>联系电话</label><input type="text" id="cfg-phone"></div>
+        <div class="form-row"><label>微信号</label><input type="text" id="cfg-wechat"></div>
+        <div class="form-row"><label>门店地址</label><input type="text" id="cfg-address"></div>
+        <div class="form-row"><label>地图链接（腾讯地图，留空则显示地址文字）</label><input type="text" id="cfg-mapUrl" placeholder="https://map.qq.com/..."></div>
+        <div class="form-row"><label>管理员密码</label><input type="text" id="cfg-adminPassword"></div>
+        <button class="btn-sm" onclick="saveConfig()">保存基础信息</button>
+      </div>
+      <div class="config-card">
+        <h3>📊 首页统计数据</h3>
+        <p style="font-size:13px;color:#666;margin-bottom:12px;">修改下方4组数据，首页"年经验/服务客户/在售产品/售后响应"会同步更新。</p>
+        <div id="stats-editor"></div>
+        <button class="btn-sm" onclick="saveStats()">保存统计数据</button>
+      </div>
+    </div>
+    <!-- 备份恢复 -->
+    <div class="admin-section" id="tab-backup">
+      <div class="backup-card">
+        <h3>💾 数据备份与恢复</h3>
+        <p>所有数据存储在浏览器本地（localStorage）。建议定期导出备份，防止更换浏览器或清理缓存导致数据丢失。</p>
+        <p><strong>注意：</strong>管理后台修改的数据只在当前浏览器生效。客户用其他手机访问看到的是初始示例数据。如需所有客户看到你修改的数据，需要导出数据后联系技术人员更新到网页代码中。导出内容包括：店铺信息、Logo、首页数据、产品、案例、文章。</p>
+        <div class="backup-btns">
+          <button class="btn-sm" onclick="exportData()">📥 导出全部数据</button>
+          <button class="btn-sm-gray" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="btn-sm-danger" onclick="resetData()">🔄 恢复初始数据</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 产品弹窗（增加视频URL+图文内容编辑器） -->
+<div class="modal-overlay hidden" id="product-modal">
+  <div class="modal" style="max-width:550px;">
+    <h3 id="product-modal-title">添加产品</h3>
+    <input type="text" id="p-name" placeholder="产品名称*">
+    <select id="p-category">
+      <option value="">选择分类*</option>
+      <option value="商用灶具">商用灶具</option><option value="消毒柜">消毒柜</option>
+      <option value="蒸饭柜">蒸饭柜</option><option value="水池">水池</option>
+      <option value="荷台">荷台</option>
+      <option value="西厨">西厨设备</option><option value="早餐炉">早餐炉</option>
+      <option value="面点">面点设备</option><option value="自助餐炉">自助餐炉</option>
+      <option value="厨杂用品">厨杂用品</option>
+      <option value="制冷">制冷设备</option><option value="洗涤">洗涤设备</option>
+      <option value="排烟">排烟系统</option><option value="加工">加工设备</option>
+      <option value="餐桌">餐桌</option><option value="餐椅">餐椅/卡座</option>
+      <option value="配套">配套用品</option>
+    </select>
+    <input type="text" id="p-price" placeholder="价格（如：2,800-4,500）">
+    <input type="text" id="p-unit" placeholder="单位（如：台、张、位）" value="台">
+
+    <!-- 视频URL输入 -->
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;color:#999;display:block;margin-bottom:4px;">🎬 产品视频（可选，填入视频链接）：</label>
+      <div class="video-input-row">
+        <input type="text" id="p-video" placeholder="输入视频URL（支持mp4/webm/抖音分享链接）">
+        <button class="clear-btn" onclick="document.getElementById('p-video').value=''">清除</button>
+      </div>
+      <p style="font-size:11px;color:#999;margin-top:2px;">支持格式：直接mp4链接、抖音视频分享链接等。视频会显示在产品详情页顶部。</p>
+    </div>
+
+    <!-- 产品图片 -->
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;color:#999;">📷 产品图片（可上传多张）：</label>
+      <div class="img-preview" id="product-img-preview"></div>
+      <input type="file" id="product-img-input" accept="image/*" onchange="uploadProductImage(this)" style="font-size:13px;">
+      <p style="font-size:11px;color:#999;margin-top:4px;">支持JPG/PNG，图片转为base64存储，无需服务器</p>
+    </div>
+
+    <!-- 规格参数 -->
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;color:#999;">规格参数：</label>
+      <div id="specs-editor"></div>
+      <button class="btn-sm-gray" onclick="addSpecRow()">＋ 添加规格</button>
+    </div>
+
+    <!-- 产品介绍（图文混排编辑器） -->
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;color:#999;display:block;margin-bottom:4px;">📝 产品介绍（支持图文混排）：</label>
+      <div class="desc-editor" id="desc-editor"></div>
+      <div class="desc-editor-btns">
+        <button class="add-text" onclick="addDescTextBlock()">＋ 添加文字段落</button>
+        <button class="add-image" onclick="addDescImageBlock()">＋ 添加图片</button>
+      </div>
+      <p style="font-size:11px;color:#999;margin-top:4px;">文字和图片交替排列，让产品介绍更生动直观</p>
+    </div>
+
+    <label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:15px;">
+      <input type="checkbox" id="p-featured"> 设为热门产品（首页展示）
+    </label>
+    <div class="modal-btns">
+      <button class="btn-sm-gray" onclick="closeProductModal()">取消</button>
+      <button class="btn-sm" onclick="saveProduct()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 案例弹窗 -->
+<div class="modal-overlay hidden" id="case-modal">
+  <div class="modal">
+    <h3 id="case-modal-title">添加案例</h3>
+    <input type="text" id="c-title" placeholder="案例标题*">
+    <input type="text" id="c-category" placeholder="分类（如：火锅店、酒店）">
+    <textarea id="c-desc" placeholder="案例描述" rows="2"></textarea>
+    <input type="text" id="c-price" placeholder="方案总价（如：8.5-12万）">
+    <input type="text" id="c-duration" placeholder="工期（如：7天）">
+    <textarea id="c-need" placeholder="客户需求" rows="2"></textarea>
+    <textarea id="c-result" placeholder="交付结果" rows="2"></textarea>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;color:#999;">设备清单（每行一个）：</label>
+      <textarea id="c-equip" rows="4" placeholder="双眼双温灶×2&#10;油烟净化一体机×1"></textarea>
+    </div>
+    <label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:15px;">
+      <input type="checkbox" id="c-featured"> 设为精选案例（首页展示）
+    </label>
+    <div class="modal-btns">
+      <button class="btn-sm-gray" onclick="closeCaseModal()">取消</button>
+      <button class="btn-sm" onclick="saveCase()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 知识弹窗 -->
+<div class="modal-overlay hidden" id="knowledge-modal">
+  <div class="modal">
+    <h3 id="knowledge-modal-title">添加文章</h3>
+    <input type="text" id="k-title" placeholder="文章标题*">
+    <input type="text" id="k-summary" placeholder="文章摘要">
+    <select id="k-category">
+      <option value="">选择分类</option>
+      <option value="避坑">避坑指南</option>
+      <option value="科普">科普知识</option>
+      <option value="选购">选购技巧</option>
+    </select>
+    <textarea id="k-content" placeholder="文章内容（每段用空行分隔）" rows="8"></textarea>
+    <label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-bottom:15px;">
+      <input type="checkbox" id="k-featured"> 设为推荐文章（首页展示）
+    </label>
+    <div class="modal-btns">
+      <button class="btn-sm-gray" onclick="closeKnowledgeModal()">取消</button>
+      <button class="btn-sm" onclick="saveKnowledge()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+let isLoggedIn = false;
+let editingProductId = null, editingCaseId = null, editingKnowledgeId = null;
+let productImages = [];
+// 图文内容编辑器数据
+let descContentBlocks = []; // [{type:'text', value:'...'}, {type:'image', value:'base64...'}]
+
+// ============ 登录 ============
+function doLogin() {
+  const pwd = document.getElementById('login-password').value;
+  const config = DB.getConfig();
+  if (pwd === config.adminPassword) {
+    isLoggedIn = true;
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('admin-page').style.display = 'block';
+    loadAllAdmin();
+  } else {
+    document.getElementById('login-error').textContent = '密码错误';
+  }
+}
+
+function doLogout() {
+  isLoggedIn = false;
+  document.getElementById('login-page').style.display = 'block';
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('login-password').value = '';
+}
+
+function switchAdminTab(tab, el) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'products') renderAdminProducts();
+  if (tab === 'cases') renderAdminCases();
+  if (tab === 'knowledge') renderAdminKnowledge();
+  if (tab === 'inquiries') renderAdminInquiries();
+  if (tab === 'config') loadConfigForm();
+}
+
+function loadAllAdmin() { renderAdminProducts(); }
+
+// ============ 产品管理 ============
+function renderAdminProducts() {
+  const keyword = (document.getElementById('search-products')?.value || '').toLowerCase();
+  let list = DB.getProducts();
+  if (keyword) list = list.filter(p => p.name.toLowerCase().includes(keyword));
+  const container = document.getElementById('admin-products-list');
+  const empty = document.getElementById('admin-products-empty');
+  if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = `<table class="data-table"><thead><tr><th>名称</th><th>分类</th><th>价格</th><th>视频</th><th>热门</th><th>操作</th></tr></thead><tbody>` +
+    list.map(p => `<tr><td>${p.name}</td><td>${p.category}</td><td>¥${p.price}</td><td>${p.video ? '🎬有' : '-'}</td><td>${p.featured ? '✅' : ''}</td><td><button class="btn-sm" style="margin-right:5px;padding:4px 10px;" onclick="editProduct('${p.id}')">编辑</button><button class="btn-sm-danger" onclick="deleteProduct('${p.id}')">删除</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+function openProductModal(id) {
+  editingProductId = id || null;
+  productImages = [];
+  descContentBlocks = [];
+  document.getElementById('product-modal-title').textContent = id ? '编辑产品' : '添加产品';
+  document.getElementById('p-name').value = '';
+  document.getElementById('p-category').value = '';
+  document.getElementById('p-price').value = '';
+  document.getElementById('p-unit').value = '台';
+  document.getElementById('p-video').value = '';
+  document.getElementById('p-featured').checked = false;
+  document.getElementById('specs-editor').innerHTML = '';
+  document.getElementById('product-img-preview').innerHTML = '';
+  document.getElementById('desc-editor').innerHTML = '';
+  if (id) {
+    const p = DB.getProduct(id);
+    if (p) {
+      document.getElementById('p-name').value = p.name || '';
+      document.getElementById('p-category').value = p.category || '';
+      document.getElementById('p-price').value = p.price || '';
+      document.getElementById('p-unit').value = p.unit || '台';
+      document.getElementById('p-video').value = p.video || '';
+      document.getElementById('p-featured').checked = !!p.featured;
+      if (p.specs) Object.entries(p.specs).forEach(([k, v]) => addSpecRow(k, v));
+      productImages = p.images || [];
+      renderProductImgPreview();
+      // 加载图文内容
+      descContentBlocks = p.descriptionContent || (p.description ? [{ type: 'text', value: p.description }] : []);
+      renderDescEditor();
+    }
+  }
+  document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
+
+function addSpecRow(key, val) {
+  const div = document.createElement('div');
+  div.className = 'spec-row';
+  div.innerHTML = `<input type="text" placeholder="规格名" value="${key || ''}"><input type="text" placeholder="规格值" value="${val || ''}"><button onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('specs-editor').appendChild(div);
+}
+
+function renderProductImgPreview() {
+  document.getElementById('product-img-preview').innerHTML = productImages.map((url, i) =>
+    `<div class="img-item"><img src="${url}"><button class="img-del" onclick="removeProductImage(${i})">✕</button></div>`
+  ).join('');
+}
+
+function removeProductImage(i) { productImages.splice(i, 1); renderProductImgPreview(); }
+
+function uploadProductImage(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('图片不能超过2MB，请压缩后再上传'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    productImages.push(e.target.result);
+    renderProductImgPreview();
+    input.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============ 图文内容编辑器 ============
+function renderDescEditor() {
+  const editor = document.getElementById('desc-editor');
+  if (!descContentBlocks.length) {
+    editor.innerHTML = '<div style="text-align:center;color:#999;padding:10px;font-size:13px;">暂无内容，请点击下方按钮添加文字或图片</div>';
+    return;
+  }
+  editor.innerHTML = descContentBlocks.map((block, i) => {
+    if (block.type === 'image') {
+      return `<div class="desc-editor-item" data-index="${i}">
+        <span class="type-badge image">📷图片</span>
+        ${block.value ? `<img src="${block.value}" onclick="replaceDescImage(${i})">` : '<button class="btn-sm-gray" onclick="uploadDescImage(${i})">上传图片</button>'}
+        <button class="del-btn" onclick="removeDescBlock(${i})">删除</button>
+      </div>`;
+    } else {
+      return `<div class="desc-editor-item" data-index="${i}">
+        <span class="type-badge text">📝文字</span>
+        <textarea rows="2" placeholder="输入文字内容..." oninput="updateDescText(${i}, this.value)">${block.value || ''}</textarea>
+        <button class="del-btn" onclick="removeDescBlock(${i})">删除</button>
+      </div>`;
+    }
+  }).join('');
+}
+
+function addDescTextBlock() {
+  descContentBlocks.push({ type: 'text', value: '' });
+  renderDescEditor();
+}
+
+function addDescImageBlock() {
+  descContentBlocks.push({ type: 'image', value: '' });
+  renderDescEditor();
+  // 自动弹出上传
+  uploadDescImage(descContentBlocks.length - 1);
+}
+
+function updateDescText(index, value) {
+  if (descContentBlocks[index]) descContentBlocks[index].value = value;
+}
+
+function removeDescBlock(index) {
+  descContentBlocks.splice(index, 1);
+  renderDescEditor();
+}
+
+function uploadDescImage(index) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    if (!e.target.files.length) return;
+    const file = e.target.files[0];
+    if (file.size > 2 * 1024 * 1024) { alert('图片不能超过2MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      descContentBlocks[index].value = ev.target.result;
+      renderDescEditor();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function replaceDescImage(index) {
+  uploadDescImage(index);
+}
+
+function saveProduct() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) { alert('请输入产品名称'); return; }
+  const category = document.getElementById('p-category').value;
+  if (!category) { alert('请选择分类'); return; }
+  const specs = {};
+  document.querySelectorAll('#specs-editor .spec-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs[0].value.trim()) specs[inputs[0].value.trim()] = inputs[1].value.trim();
+  });
+  // 过滤掉空的图文内容块
+  const filteredContent = descContentBlocks.filter(b => b.type === 'image' ? b.value : b.value.trim());
+  const descText = filteredContent.filter(b => b.type === 'text').map(b => b.value).join('\n');
+  const data = {
+    name, category,
+    price: document.getElementById('p-price').value.trim(),
+    unit: document.getElementById('p-unit').value.trim() || '台',
+    video: document.getElementById('p-video').value.trim(),
+    images: productImages,
+    specs,
+    description: descText || '',
+    descriptionContent: filteredContent,
+    featured: document.getElementById('p-featured').checked
+  };
+  if (editingProductId) { DB.updateProduct(editingProductId, data); } else { DB.addProduct(data); }
+  alert('保存成功！');
+  closeProductModal();
+  renderAdminProducts();
+}
+
+function editProduct(id) { openProductModal(id); }
+
+function deleteProduct(id) {
+  if (!confirm('确定删除该产品吗？')) return;
+  DB.deleteProduct(id);
+  renderAdminProducts();
+}
+
+// ============ 案例管理 ============
+function renderAdminCases() {
+  const list = DB.getCases();
+  const container = document.getElementById('admin-cases-list');
+  const empty = document.getElementById('admin-cases-empty');
+  if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = `<table class="data-table"><thead><tr><th>标题</th><th>分类</th><th>总价</th><th>操作</th></tr></thead><tbody>` +
+    list.map(c => `<tr><td>${c.title}</td><td>${c.category}</td><td>¥${c.totalPrice}</td><td><button class="btn-sm" style="margin-right:5px;padding:4px 10px;" onclick="editCase('${c.id}')">编辑</button><button class="btn-sm-danger" onclick="deleteCase('${c.id}')">删除</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+function openCaseModal(id) {
+  editingCaseId = id || null;
+  document.getElementById('case-modal-title').textContent = id ? '编辑案例' : '添加案例';
+  ['c-title','c-category','c-desc','c-price','c-duration','c-need','c-result','c-equip'].forEach(x => document.getElementById(x).value = '');
+  document.getElementById('c-featured').checked = false;
+  if (id) {
+    const c = DB.getCase(id);
+    if (c) {
+      document.getElementById('c-title').value = c.title || '';
+      document.getElementById('c-category').value = c.category || '';
+      document.getElementById('c-desc').value = c.description || '';
+      document.getElementById('c-price').value = c.totalPrice || '';
+      document.getElementById('c-duration').value = c.duration || '';
+      document.getElementById('c-need').value = c.customerNeed || '';
+      document.getElementById('c-result').value = c.result || '';
+      document.getElementById('c-equip').value = (c.equipmentList || []).join('\n');
+      document.getElementById('c-featured').checked = !!c.featured;
+    }
+  }
+  document.getElementById('case-modal').classList.remove('hidden');
+}
+
+function closeCaseModal() { document.getElementById('case-modal').classList.add('hidden'); }
+
+function saveCase() {
+  const title = document.getElementById('c-title').value.trim();
+  if (!title) { alert('请输入案例标题'); return; }
+  const data = {
+    title,
+    category: document.getElementById('c-category').value.trim(),
+    description: document.getElementById('c-desc').value.trim(),
+    totalPrice: document.getElementById('c-price').value.trim(),
+    duration: document.getElementById('c-duration').value.trim(),
+    customerNeed: document.getElementById('c-need').value.trim(),
+    result: document.getElementById('c-result').value.trim(),
+    equipmentList: document.getElementById('c-equip').value.split('\n').filter(x => x.trim()),
+    featured: document.getElementById('c-featured').checked
+  };
+  if (editingCaseId) { DB.updateCase(editingCaseId, data); } else { DB.addCase(data); }
+  alert('保存成功！');
+  closeCaseModal();
+  renderAdminCases();
+}
+
+function editCase(id) { openCaseModal(id); }
+
+function deleteCase(id) {
+  if (!confirm('确定删除该案例吗？')) return;
+  DB.deleteCase(id);
+  renderAdminCases();
+}
+
+// ============ 知识管理 ============
+function renderAdminKnowledge() {
+  const list = DB.getKnowledge();
+  const container = document.getElementById('admin-knowledge-list');
+  const empty = document.getElementById('admin-knowledge-empty');
+  if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = `<table class="data-table"><thead><tr><th>标题</th><th>分类</th><th>推荐</th><th>操作</th></tr></thead><tbody>` +
+    list.map(k => `<tr><td>${k.title}</td><td>${k.category}</td><td>${k.featured ? '✅' : ''}</td><td><button class="btn-sm" style="margin-right:5px;padding:4px 10px;" onclick="editKnowledge('${k.id}')">编辑</button><button class="btn-sm-danger" onclick="deleteKnowledge('${k.id}')">删除</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+
+function openKnowledgeModal(id) {
+  editingKnowledgeId = id || null;
+  document.getElementById('knowledge-modal-title').textContent = id ? '编辑文章' : '添加文章';
+  ['k-title','k-summary','k-content'].forEach(x => document.getElementById(x).value = '');
+  document.getElementById('k-category').value = '';
+  document.getElementById('k-featured').checked = false;
+  if (id) {
+    const k = DB.getArticle(id);
+    if (k) {
+      document.getElementById('k-title').value = k.title || '';
+      document.getElementById('k-summary').value = k.summary || '';
+      document.getElementById('k-category').value = k.category || '';
+      document.getElementById('k-content').value = k.content || '';
+      document.getElementById('k-featured').checked = !!k.featured;
+    }
+  }
+  document.getElementById('knowledge-modal').classList.remove('hidden');
+}
+
+function closeKnowledgeModal() { document.getElementById('knowledge-modal').classList.add('hidden'); }
+
+function saveKnowledge() {
+  const title = document.getElementById('k-title').value.trim();
+  if (!title) { alert('请输入文章标题'); return; }
+  const data = {
+    title,
+    summary: document.getElementById('k-summary').value.trim(),
+    category: document.getElementById('k-category').value,
+    content: document.getElementById('k-content').value.trim(),
+    featured: document.getElementById('k-featured').checked
+  };
+  if (editingKnowledgeId) { DB.updateArticle(editingKnowledgeId, data); } else { DB.addArticle(data); }
+  alert('保存成功！');
+  closeKnowledgeModal();
+  renderAdminKnowledge();
+}
+
+function editKnowledge(id) { openKnowledgeModal(id); }
+
+function deleteKnowledge(id) {
+  if (!confirm('确定删除该文章吗？')) return;
+  DB.deleteArticle(id);
+  renderAdminKnowledge();
+}
+
+// ============ 询价管理 ============
+function renderAdminInquiries() {
+  const list = DB.getInquiries();
+  const container = document.getElementById('admin-inquiries-list');
+  const empty = document.getElementById('admin-inquiries-empty');
+  if (!list.length) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = list.slice().reverse().map(i => `
+    <div style="background:#fff;border-radius:10px;padding:15px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:bold;">${i.name || '未知'}</span>
+        <span style="font-size:12px;color:#999;">${new Date(i.createdAt).toLocaleString('zh-CN')}</span>
+      </div>
+      <div style="font-size:13px;color:#666;line-height:1.6;">
+        <div>📞 ${i.phone || '-'}</div>
+        <div>📦 需求类型：${i.type || '-'}</div>
+        ${i.area ? `<div>📏 ${i.area}</div>` : ''}
+        ${i.description ? `<div>📝 ${i.description}</div>` : ''}
+        <div style="margin-top:5px;">状态：<span style="color:${i.status === '已联系' ? '#4CAF50' : '#e74c1f'};font-weight:bold;">${i.status || '待处理'}</span></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button class="btn-sm" onclick="updateInquiryStatus('${i.id}','已联系')">标记已联系</button>
+        <button class="btn-sm-danger" onclick="deleteInquiry('${i.id}')">删除</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateInquiryStatus(id, status) { DB.updateInquiry(id, { status }); renderAdminInquiries(); }
+
+function deleteInquiry(id) {
+  if (!confirm('确定删除该询价记录吗？')) return;
+  DB.deleteInquiry(id);
+  renderAdminInquiries();
+}
+
+// ============ 店铺设置 ============
+let editingStats = [];
+
+function loadConfigForm() {
+  const config = DB.getConfig();
+  document.getElementById('cfg-shopName').value = config.shopName || '';
+  document.getElementById('cfg-logoUrl').value = config.logoUrl || '';
+  document.getElementById('cfg-logo-preview').src = config.logoUrl || '';
+  document.getElementById('cfg-heroBgImage').value = config.heroBgImage || '';
+  document.getElementById('cfg-heroBg-preview').src = config.heroBgImage || '';
+  document.getElementById('cfg-heroSlogan').value = config.heroSlogan || '15年行业经验 · 500+客户信赖 · 正品保障';
+  document.getElementById('cfg-phone').value = config.phone || '';
+  document.getElementById('cfg-wechat').value = config.wechat || '';
+  document.getElementById('cfg-address').value = config.address || '';
+  document.getElementById('cfg-mapUrl').value = config.mapUrl || '';
+  document.getElementById('cfg-adminPassword').value = config.adminPassword || '';
+  loadStatsEditor();
+}
+
+function uploadLogo(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('Logo图片不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('cfg-logo-preview').src = e.target.result;
+    document.getElementById('cfg-logoUrl').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearLogo() {
+  document.getElementById('cfg-logo-preview').src = '';
+  document.getElementById('cfg-logoUrl').value = '';
+}
+
+function uploadHeroBg(input) {
+  if (!input.files.length) return;
+  const file = input.files[0];
+  if (file.size > 2 * 1024 * 1024) { alert('横幅背景图不能超过2MB'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('cfg-heroBg-preview').src = e.target.result;
+    document.getElementById('cfg-heroBgImage').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearHeroBg() {
+  document.getElementById('cfg-heroBg-preview').src = '';
+  document.getElementById('cfg-heroBgImage').value = '';
+}
+
+function saveConfig() {
+  const config = {
+    shopName: document.getElementById('cfg-shopName').value.trim(),
+    logoUrl: document.getElementById('cfg-logoUrl').value.trim(),
+    heroBgImage: document.getElementById('cfg-heroBgImage').value.trim(),
+    heroSlogan: document.getElementById('cfg-heroSlogan').value.trim() || '15年行业经验 · 500+客户信赖 · 正品保障',
+    phone: document.getElementById('cfg-phone').value.trim(),
+    wechat: document.getElementById('cfg-wechat').value.trim(),
+    address: document.getElementById('cfg-address').value.trim(),
+    mapUrl: document.getElementById('cfg-mapUrl').value.trim(),
+    adminPassword: document.getElementById('cfg-adminPassword').value.trim()
+  };
+  DB.setConfig(config);
+  alert('✅ 店铺基础信息保存成功！');
+}
+
+function loadStatsEditor() {
+  editingStats = DB.getStats().map(s => ({ ...s }));
+  const container = document.getElementById('stats-editor');
+  container.innerHTML = editingStats.map((s, i) => `
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
+      <span style="font-size:13px;color:#999;width:24px;">${i + 1}</span>
+      <input type="text" id="stat-num-${i}" value="${s.num}" placeholder="数字" style="width:80px;">
+      <input type="text" id="stat-label-${i}" value="${s.label}" placeholder="说明文字" style="flex:1;">
+    </div>
+  `).join('');
+}
+
+function saveStats() {
+  const stats = editingStats.map((s, i) => ({
+    num: document.getElementById(`stat-num-${i}`).value.trim(),
+    label: document.getElementById(`stat-label-${i}`).value.trim()
+  })).filter(s => s.num && s.label);
+  if (stats.length < 4) {
+    alert('请完整填写4组统计数据');
+    return;
+  }
+  DB.setStats(stats);
+  alert('✅ 统计数据保存成功！');
+}
+
+// ============ 备份恢复 ============
+function exportData() {
+  const data = DB.exportAll();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '厨具家具平台数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!confirm('确定导入数据吗？这将覆盖当前所有数据！')) return;
+      DB.importAll(data);
+      alert('✅ 数据导入成功！');
+      loadAllAdmin();
+    } catch (err) {
+      alert('导入失败：文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetData() {
+  if (!confirm('确定恢复初始数据吗？这将删除你所有修改！')) return;
+  if (!confirm('再次确认：所有产品、案例、文章、询价、设置将被重置为初始状态！')) return;
+  ['products', 'cases', 'knowledge', 'inquiries'].forEach(key => localStorage.removeItem('h5_shop_' + key));
+  localStorage.removeItem('h5_shop_config');
+  localStorage.removeItem('h5_shop_stats');
+  alert('✅ 已恢复初始数据');
+  loadAllAdmin();
+}
+</script>
+</body>
+</html>
