@@ -1,23 +1,24 @@
-// app.js - 前端展示逻辑（纯前端版，数据存localStorage）
+// app.js - 前端展示逻辑（自动从云端拉取最新数据）
 
-// ============ 手机同步：检测URL中的同步数据 ============
-(function() {
-  var hash = window.location.hash;
-  if (hash && hash.startsWith('#sync=')) {
-    try {
-      var base64 = hash.substring(6);
-      var json = decodeURIComponent(escape(atob(base64)));
-      var data = JSON.parse(json);
-      DB.importAll(data);
-      window.location.hash = '';
-      window.location.reload();
-    } catch(e) {
-      console.error('同步导入失败', e);
-      alert('数据同步失败，请重试或使用导入功能。');
-      window.location.hash = '';
+// ============ 从云端加载最新数据 ============
+async function loadCloudData() {
+  try {
+    const resp = await fetch('data.json?t=' + Date.now());
+    if (resp.ok) {
+      const data = await resp.json();
+      // 只导入内容数据，不覆盖本地询价记录
+      if (data.config) DB.setConfig(data.config);
+      if (data.stats) DB.setStats(data.stats);
+      if (data.products) DB.set('products', data.products);
+      if (data.cases) DB.set('cases', data.cases);
+      if (data.knowledge) DB.set('knowledge', data.knowledge);
+      return true;
     }
+  } catch(e) {
+    console.log('云端数据加载失败，使用本地数据', e);
   }
-})();
+  return false;
+}
 
 let CONFIG = {};
 
@@ -537,7 +538,8 @@ function openMap() {
 function openAdmin() { window.open('admin.html', '_blank'); }
 
 // ============ 初始化 ============
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadCloudData();
   initConfig();
   loadHome();
 });
