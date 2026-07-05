@@ -436,10 +436,26 @@ function doLogin() {
     isLoggedIn = true;
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('admin-page').style.display = 'block';
-    loadAllAdmin();
+    loadCloudDataForAdmin();
   } else {
     document.getElementById('login-error').textContent = '密码错误';
   }
+}
+
+// 管理后台也从云端拉取最新数据
+async function loadCloudDataForAdmin() {
+  try {
+    const resp = await fetch('data.json?t=' + Date.now());
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.config) DB.setConfig(data.config);
+      if (data.stats) DB.setStats(data.stats);
+      if (data.products) DB.set('products', data.products);
+      if (data.cases) DB.set('cases', data.cases);
+      if (data.knowledge) DB.set('knowledge', data.knowledge);
+    }
+  } catch(e) { console.log('Admin cloud data load failed', e); }
+  loadAllAdmin();
 }
 
 function doLogout() {
