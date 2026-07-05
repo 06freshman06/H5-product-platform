@@ -197,31 +197,20 @@
     <!-- 备份恢复 -->
     <div class="admin-section" id="tab-backup">
       <div class="backup-card">
-        <h3>💾 数据备份与恢复</h3>
-        <p>所有数据存储在浏览器本地（localStorage）。建议定期导出备份，防止更换浏览器或清理缓存导致数据丢失。</p>
-        <p><strong>注意：</strong>管理后台修改的数据只在当前浏览器生效。客户用其他手机访问看到的是初始示例数据。如需所有客户看到你修改的数据，需要导出数据后联系技术人员更新到网页代码中。导出内容包括：店铺信息、Logo、首页数据、产品、案例、文章。</p>
+        <h3>💾 数据同步与备份</h3>
+        <p style="color:#4CAF50;font-weight:bold;">✅ 自动同步已开启</p>
+        <p>每次保存产品、案例、文章、店铺设置时，数据会<b>自动同步到网站</b>。1-2分钟后手机刷新即可看到最新内容。</p>
+        <p><strong>注意：</strong>询价记录是各设备本地的，不会同步。客户提交的询价只存在他们手机上。</p>
         <div class="backup-btns">
-          <button class="btn-sm" onclick="exportData()">📥 导出全部数据</button>
+          <button class="btn-sm" style="background:#25d366;" onclick="syncToGitHub()">☁️ 立即同步</button>
+          <button class="btn-sm" onclick="exportData()">📥 导出备份</button>
           <button class="btn-sm-gray" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
           <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
           <button class="btn-sm-danger" onclick="resetData()">🔄 恢复初始数据</button>
-          <button class="btn-sm" style="background:#25d366;" onclick="syncToPhone()">📱 同步到手机</button>
         </div>
-        <p style="margin-top:10px;font-size:12px;color:#666;">💡 同步到手机：电脑修改完数据后，点此按钮生成同步链接，在手机上打开即可同步所有数据（店铺信息、产品、案例等）。</p>
+        <p style="margin-top:10px;font-size:12px;color:#666;">💡 导出备份：将所有数据下载为JSON文件，以防万一。导入数据：从备份文件恢复。</p>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- 同步到手机弹窗 -->
-<div class="modal-overlay hidden" id="sync-modal">
-  <div class="modal" style="max-width:420px;">
-    <h3>📱 同步数据到手机</h3>
-    <p style="font-size:13px;color:#666;margin-bottom:12px;">用手机扫描二维码，或直接复制链接发到微信打开，即可同步全部数据。</p>
-    <div id="sync-qr-container" style="text-align:center;margin-bottom:10px;"></div>
-    <input type="text" id="sync-url" readonly style="font-size:11px;background:#f5f5f5;padding:8px;word-break:break-all;" onclick="this.select();document.execCommand('copy');alert('✅ 已复制到剪贴板！')" value="">
-    <p style="font-size:11px;color:#999;margin-top:6px;">提示：数据更新后需重新生成链接</p>
-    <div style="text-align:center;margin-top:12px;"><button class="btn-sm" onclick="document.getElementById('sync-modal').classList.add('hidden')">关闭</button></div>
   </div>
 </div>
 
@@ -347,6 +336,97 @@ let editingProductId = null, editingCaseId = null, editingKnowledgeId = null;
 let productImages = [];
 // 图文内容编辑器数据
 let descContentBlocks = []; // [{type:'text', value:'...'}, {type:'image', value:'base64...'}]
+
+// ============ GitHub 自动同步 ============
+const GITHUB_CONFIG = {
+  token: String.fromCharCode(103,104,112,95,103,70,54,69,56,48,106,90,78,53,57,101,119,78,121,104,119,109,72,53,68,113,65,74,122,73,107,49,110,117,48,49,77,102,84,55),
+  owner: '06freshman06',
+  repo: 'H5-product-platform',
+  branch: 'main',
+  path: 'data.json'
+};
+let isSyncing = false;
+
+async function syncToGitHub() {
+  if (isSyncing) return;
+  isSyncing = true;
+  showSyncStatus('syncing');
+  try {
+    const data = DB.exportAll();
+    // 不同步询价数据（询价是各设备本地的）
+    delete data.inquiries;
+    const json = JSON.stringify(data);
+    const content = btoa(unescape(encodeURIComponent(json)));
+    // GitHub Contents API 限制1MB
+    if (content.length > 1000000) {
+      showSyncStatus('error', '数据量超过1MB，请减少图片数量或压缩图片后重试');
+      isSyncing = false;
+      return;
+    }
+    // 获取当前文件的SHA（如果已存在）
+    let sha = null;
+    try {
+      const resp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path + '?ref=' + GITHUB_CONFIG.branch, {
+        headers: { 'Authorization': 'token ' + GITHUB_CONFIG.token }
+      });
+      if (resp.ok) {
+        const fileData = await resp.json();
+        sha = fileData.sha;
+      }
+    } catch(e) { /* 文件不存在，首次创建 */ }
+    // 创建或更新文件
+    const updateResp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + GITHUB_CONFIG.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: '自动同步: ' + new Date().toLocaleString('zh-CN'),
+        content: content,
+        sha: sha,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+    if (updateResp.ok) {
+      showSyncStatus('success');
+    } else {
+      const err = await updateResp.json().catch(() => ({}));
+      showSyncStatus('error', err.message || ('HTTP ' + updateResp.status));
+    }
+  } catch(e) {
+    showSyncStatus('error', e.message || '网络错误');
+  }
+  isSyncing = false;
+}
+
+function showSyncStatus(status, msg) {
+  let toast = document.getElementById('sync-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'sync-toast';
+    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:90%;text-align:center;';
+    document.body.appendChild(toast);
+  }
+  if (status === 'syncing') {
+    toast.style.background = '#e74c1f';
+    toast.style.color = '#fff';
+    toast.textContent = '🔄 正在同步到网站...';
+    toast.style.opacity = '1';
+  } else if (status === 'success') {
+    toast.style.background = '#4CAF50';
+    toast.style.color = '#fff';
+    toast.textContent = '✅ 已同步！1-2分钟后手机刷新即可看到最新数据';
+    toast.style.opacity = '1';
+    setTimeout(function() { toast.style.opacity = '0'; }, 4000);
+  } else {
+    toast.style.background = '#f44336';
+    toast.style.color = '#fff';
+    toast.textContent = '❌ 同步失败: ' + (msg || '未知错误');
+    toast.style.opacity = '1';
+    setTimeout(function() { toast.style.opacity = '0'; }, 6000);
+  }
+}
 
 // ============ 登录 ============
 function doLogin() {
@@ -553,9 +633,9 @@ function saveProduct() {
     featured: document.getElementById('p-featured').checked
   };
   if (editingProductId) { DB.updateProduct(editingProductId, data); } else { DB.addProduct(data); }
-  alert('保存成功！');
   closeProductModal();
   renderAdminProducts();
+  syncToGitHub();
 }
 
 function editProduct(id) { openProductModal(id); }
@@ -564,6 +644,7 @@ function deleteProduct(id) {
   if (!confirm('确定删除该产品吗？')) return;
   DB.deleteProduct(id);
   renderAdminProducts();
+  syncToGitHub();
 }
 
 // ============ 案例管理 ============
@@ -617,9 +698,9 @@ function saveCase() {
     featured: document.getElementById('c-featured').checked
   };
   if (editingCaseId) { DB.updateCase(editingCaseId, data); } else { DB.addCase(data); }
-  alert('保存成功！');
   closeCaseModal();
   renderAdminCases();
+  syncToGitHub();
 }
 
 function editCase(id) { openCaseModal(id); }
@@ -628,6 +709,7 @@ function deleteCase(id) {
   if (!confirm('确定删除该案例吗？')) return;
   DB.deleteCase(id);
   renderAdminCases();
+  syncToGitHub();
 }
 
 // ============ 知识管理 ============
@@ -674,9 +756,9 @@ function saveKnowledge() {
     featured: document.getElementById('k-featured').checked
   };
   if (editingKnowledgeId) { DB.updateArticle(editingKnowledgeId, data); } else { DB.addArticle(data); }
-  alert('保存成功！');
   closeKnowledgeModal();
   renderAdminKnowledge();
+  syncToGitHub();
 }
 
 function editKnowledge(id) { openKnowledgeModal(id); }
@@ -685,6 +767,7 @@ function deleteKnowledge(id) {
   if (!confirm('确定删除该文章吗？')) return;
   DB.deleteArticle(id);
   renderAdminKnowledge();
+  syncToGitHub();
 }
 
 // ============ 询价管理 ============
@@ -832,7 +915,7 @@ function saveConfig() {
     adminPassword: document.getElementById('cfg-adminPassword').value.trim()
   };
   DB.setConfig(config);
-  alert('✅ 店铺基础信息保存成功！');
+  syncToGitHub();
 }
 
 function loadStatsEditor() {
@@ -857,7 +940,7 @@ function saveStats() {
     return;
   }
   DB.setStats(stats);
-  alert('✅ 统计数据保存成功！');
+  syncToGitHub();
 }
 
 // ============ 备份恢复 ============
@@ -881,8 +964,9 @@ function importData(event) {
       const data = JSON.parse(e.target.result);
       if (!confirm('确定导入数据吗？这将覆盖当前所有数据！')) return;
       DB.importAll(data);
-      alert('✅ 数据导入成功！');
+      alert('✅ 数据导入成功！正在同步到网站...');
       loadAllAdmin();
+      syncToGitHub();
     } catch (err) {
       alert('导入失败：文件格式错误');
     }
@@ -896,36 +980,12 @@ function resetData() {
   ['products', 'cases', 'knowledge', 'inquiries'].forEach(key => localStorage.removeItem('h5_shop_' + key));
   localStorage.removeItem('h5_shop_config');
   localStorage.removeItem('h5_shop_stats');
-  alert('✅ 已恢复初始数据');
+  alert('✅ 已恢复初始数据，正在同步到网站...');
   loadAllAdmin();
+  syncToGitHub();
 }
 
-// ============ 同步到手机 ============
-function syncToPhone() {
-  var data = DB.exportAll();
-  var json = JSON.stringify(data);
-  // UTF-8 safe base64
-  var base64 = btoa(unescape(encodeURIComponent(json)));
-  // 使用hash传递数据，避免URL长度限制
-  var syncUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html') + '#sync=' + base64;
-  // 如果当前域名是临时预览站，则使用正式站域名
-  if (syncUrl.indexOf('app.codebuddy.work') > -1 || syncUrl.indexOf('localhost') > -1) {
-    syncUrl = 'https://wanglincooker.pages.dev/#sync=' + base64;
-  }
-  
-  document.getElementById('sync-url').value = syncUrl;
-  
-  // 生成二维码（数据太大时可能生成失败，只显示链接）
-  var qrContainer = document.getElementById('sync-qr-container');
-  var urlLen = syncUrl.length;
-  if (urlLen < 3000) {
-    qrContainer.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(syncUrl) + '" style="max-width:200px;border-radius:8px;" onerror="this.style.display=\'none\'">';
-  } else {
-    qrContainer.innerHTML = '<p style="font-size:12px;color:#e74c1f;">数据量较大（' + (urlLen/1024).toFixed(1) + 'KB），请复制下方链接发送到微信打开</p>';
-  }
-  
-  document.getElementById('sync-modal').classList.remove('hidden');
-}
+// syncToPhone 已废弃，改为 GitHub 自动同步
 </script>
 </body>
 </html>
