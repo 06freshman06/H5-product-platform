@@ -36,7 +36,8 @@ body {
 
 /* ===== Hero横幅轮播 ===== */
 .hero {
-  position: relative; aspect-ratio: 16 / 9; max-height: 360px; overflow: hidden;
+  position: relative; width: 100%; max-width: 800px; margin: 0 auto;
+  aspect-ratio: 16 / 9; max-height: 400px; overflow: hidden;
   background: linear-gradient(135deg, #e74c1f 0%, #ff6b35 50%, #ff9500 100%);
 }
 .hero-bg-carousel {
