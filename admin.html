@@ -346,6 +346,7 @@ const GITHUB_CONFIG = {
   path: 'data.json'
 };
 let isSyncing = false;
+let pendingSync = false;
 
 async function getLatestSha() {
   try {
@@ -361,8 +362,9 @@ async function getLatestSha() {
 }
 
 async function syncToGitHub() {
-  if (isSyncing) return;
+  if (isSyncing) { pendingSync = true; return; }
   isSyncing = true;
+  pendingSync = false;
   showSyncStatus('syncing');
   let retries = 0;
   const maxRetries = 3;
@@ -395,6 +397,12 @@ async function syncToGitHub() {
         });
         if (updateResp.ok) {
           showSyncStatus('success');
+          // 如果在同步期间有新的保存请求，再同步一次
+          if (pendingSync) {
+            isSyncing = false;
+            pendingSync = false;
+            setTimeout(() => syncToGitHub(), 500);
+          }
           return;
         } else if (updateResp.status === 422) {
           const err = await updateResp.json().catch(() => ({}));
@@ -430,6 +438,19 @@ async function syncToGitHub() {
   } finally {
     isSyncing = false;
   }
+}
+
+function showSaveTip(type) {
+  let tip = document.getElementById('save-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'save-tip';
+    tip.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);padding:10px 24px;border-radius:10px;font-size:14px;z-index:9999;background:#4CAF50;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:opacity 0.3s;';
+    document.body.appendChild(tip);
+  }
+  tip.textContent = '✅ ' + type + '已保存，正在同步...';
+  tip.style.opacity = '1';
+  setTimeout(() => { tip.style.opacity = '0'; }, 2000);
 }
 
 function showSyncStatus(status, msg) {
@@ -600,7 +621,7 @@ function renderDescEditor() {
     if (block.type === 'image') {
       return `<div class="desc-editor-item" data-index="${i}">
         <span class="type-badge image">📷图片</span>
-        ${block.value ? `<img src="${block.value}" onclick="replaceDescImage(${i})">` : '<button class="btn-sm-gray" onclick="uploadDescImage(${i})">上传图片</button>'}
+        ${block.value ? `<img src="${block.value}" onclick="replaceDescImage(${i})">` : `<button class="btn-sm-gray" onclick="uploadDescImage(${i})">上传图片</button>`}
         <button class="del-btn" onclick="removeDescBlock(${i})">删除</button>
       </div>`;
     } else {
@@ -683,6 +704,7 @@ function saveProduct() {
   if (editingProductId) { DB.updateProduct(editingProductId, data); } else { DB.addProduct(data); }
   closeProductModal();
   renderAdminProducts();
+  showSaveTip('产品');
   syncToGitHub();
 }
 
@@ -748,6 +770,7 @@ function saveCase() {
   if (editingCaseId) { DB.updateCase(editingCaseId, data); } else { DB.addCase(data); }
   closeCaseModal();
   renderAdminCases();
+  showSaveTip('案例');
   syncToGitHub();
 }
 
@@ -806,6 +829,7 @@ function saveKnowledge() {
   if (editingKnowledgeId) { DB.updateArticle(editingKnowledgeId, data); } else { DB.addArticle(data); }
   closeKnowledgeModal();
   renderAdminKnowledge();
+  showSaveTip('文章');
   syncToGitHub();
 }
 
@@ -963,6 +987,7 @@ function saveConfig() {
     adminPassword: document.getElementById('cfg-adminPassword').value.trim()
   };
   DB.setConfig(config);
+  showSaveTip('店铺信息');
   syncToGitHub();
 }
 
@@ -988,6 +1013,7 @@ function saveStats() {
     return;
   }
   DB.setStats(stats);
+  showSaveTip('统计数据');
   syncToGitHub();
 }
 
