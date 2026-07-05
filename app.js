@@ -70,6 +70,7 @@ function initConfig() {
 // ============ 首页横幅轮播 ============
 let heroCarouselTimer = null;
 let heroCarouselIdx = 0;
+let heroCarouselTouchAdded = false;
 
 function initHeroCarousel(images) {
   const carousel = document.getElementById('hero-bg-carousel');
@@ -110,7 +111,9 @@ function initHeroCarousel(images) {
     startHeroAutoPlay(images.length);
   }
 
-  // 触摸滑动
+  // 触摸滑动（只绑定一次）
+  if (heroCarouselTouchAdded) return;
+  heroCarouselTouchAdded = true;
   let touchStartX = 0, touchEndX = 0;
   carousel.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
@@ -119,11 +122,13 @@ function initHeroCarousel(images) {
   carousel.addEventListener('touchend', (e) => {
     touchEndX = e.changedTouches[0].screenX;
     const diff = touchStartX - touchEndX;
+    const total = document.querySelectorAll('.hero-bg-slide').length;
+    if (total < 2) return;
     if (Math.abs(diff) > 50) {
-      if (diff > 0) goHeroSlide((heroCarouselIdx + 1) % images.length, images.length);
-      else goHeroSlide((heroCarouselIdx - 1 + images.length) % images.length, images.length);
+      if (diff > 0) goHeroSlide((heroCarouselIdx + 1) % total, total);
+      else goHeroSlide((heroCarouselIdx - 1 + total) % total, total);
     }
-    startHeroAutoPlay(images.length);
+    startHeroAutoPlay(total);
   });
 }
 
@@ -291,6 +296,8 @@ function renderProducts(products) {
 function showProductDetail(id) {
   const p = DB.getProduct(id);
   if (!p) return;
+  sliderIndex = 0;
+  sliderIndexHidden = 0;
   const specsHtml = p.specs ? Object.entries(p.specs).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('') : '';
 
   // 顶部媒体区：如果有视频则显示视频播放器，否则显示图片轮播
