@@ -347,10 +347,25 @@ const GITHUB_CONFIG = {
 };
 let isSyncing = false;
 
+async function getLatestSha() {
+  try {
+    const resp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path + '?ref=' + GITHUB_CONFIG.branch + '&t=' + Date.now(), {
+      headers: { 'Authorization': 'token ' + GITHUB_CONFIG.token }
+    });
+    if (resp.ok) {
+      const fileData = await resp.json();
+      return fileData.sha;
+    }
+  } catch(e) { /* 文件不存在或网络错误 */ }
+  return null;
+}
+
 async function syncToGitHub() {
   if (isSyncing) return;
   isSyncing = true;
   showSyncStatus('syncing');
+  let retries = 0;
+  const maxRetries = 3;
   try {
     const data = DB.exportAll();
     // 不同步询价数据（询价是各设备本地的）
@@ -360,44 +375,61 @@ async function syncToGitHub() {
     // GitHub Contents API 限制1MB
     if (content.length > 1000000) {
       showSyncStatus('error', '数据量超过1MB，请减少图片数量或压缩图片后重试');
-      isSyncing = false;
       return;
     }
-    // 获取当前文件的SHA（如果已存在）
-    let sha = null;
-    try {
-      const resp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path + '?ref=' + GITHUB_CONFIG.branch, {
-        headers: { 'Authorization': 'token ' + GITHUB_CONFIG.token }
-      });
-      if (resp.ok) {
-        const fileData = await resp.json();
-        sha = fileData.sha;
+    while (retries <= maxRetries) {
+      try {
+        const sha = await getLatestSha();
+        const updateResp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'token ' + GITHUB_CONFIG.token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: '自动同步: ' + new Date().toLocaleString('zh-CN') + (retries > 0 ? ' (retry ' + retries + ')' : ''),
+            content: content,
+            sha: sha,
+            branch: GITHUB_CONFIG.branch
+          })
+        });
+        if (updateResp.ok) {
+          showSyncStatus('success');
+          return;
+        } else if (updateResp.status === 422) {
+          const err = await updateResp.json().catch(() => ({}));
+          if (err.message && err.message.includes('does not match')) {
+            retries++;
+            if (retries <= maxRetries) {
+              showSyncStatus('syncing');
+              await new Promise(r => setTimeout(r, 1000));
+              continue;
+            }
+            showSyncStatus('error', '云端数据有冲突，请刷新页面后重试');
+            return;
+          }
+          showSyncStatus('error', err.message || ('HTTP ' + updateResp.status));
+          return;
+        } else {
+          const err = await updateResp.json().catch(() => ({}));
+          showSyncStatus('error', err.message || ('HTTP ' + updateResp.status));
+          return;
+        }
+      } catch(e) {
+        retries++;
+        if (retries <= maxRetries) {
+          await new Promise(r => setTimeout(r, 1000));
+          continue;
+        }
+        showSyncStatus('error', e.message || '网络错误');
+        return;
       }
-    } catch(e) { /* 文件不存在，首次创建 */ }
-    // 创建或更新文件
-    const updateResp = await fetch('https://api.github.com/repos/' + GITHUB_CONFIG.owner + '/' + GITHUB_CONFIG.repo + '/contents/' + GITHUB_CONFIG.path, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'token ' + GITHUB_CONFIG.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: '自动同步: ' + new Date().toLocaleString('zh-CN'),
-        content: content,
-        sha: sha,
-        branch: GITHUB_CONFIG.branch
-      })
-    });
-    if (updateResp.ok) {
-      showSyncStatus('success');
-    } else {
-      const err = await updateResp.json().catch(() => ({}));
-      showSyncStatus('error', err.message || ('HTTP ' + updateResp.status));
     }
   } catch(e) {
     showSyncStatus('error', e.message || '网络错误');
+  } finally {
+    isSyncing = false;
   }
-  isSyncing = false;
 }
 
 function showSyncStatus(status, msg) {
