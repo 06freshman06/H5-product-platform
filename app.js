@@ -1,4 +1,24 @@
 // app.js - 前端展示逻辑（纯前端版，数据存localStorage）
+
+// ============ 手机同步：检测URL中的同步数据 ============
+(function() {
+  var hash = window.location.hash;
+  if (hash && hash.startsWith('#sync=')) {
+    try {
+      var base64 = hash.substring(6);
+      var json = decodeURIComponent(escape(atob(base64)));
+      var data = JSON.parse(json);
+      DB.importAll(data);
+      window.location.hash = '';
+      window.location.reload();
+    } catch(e) {
+      console.error('同步导入失败', e);
+      alert('数据同步失败，请重试或使用导入功能。');
+      window.location.hash = '';
+    }
+  }
+})();
+
 let CONFIG = {};
 
 function initConfig() {

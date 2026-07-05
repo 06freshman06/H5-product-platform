@@ -205,9 +205,23 @@
           <button class="btn-sm-gray" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
           <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
           <button class="btn-sm-danger" onclick="resetData()">🔄 恢复初始数据</button>
+          <button class="btn-sm" style="background:#25d366;" onclick="syncToPhone()">📱 同步到手机</button>
         </div>
+        <p style="margin-top:10px;font-size:12px;color:#666;">💡 同步到手机：电脑修改完数据后，点此按钮生成同步链接，在手机上打开即可同步所有数据（店铺信息、产品、案例等）。</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 同步到手机弹窗 -->
+<div class="modal-overlay hidden" id="sync-modal">
+  <div class="modal" style="max-width:420px;">
+    <h3>📱 同步数据到手机</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:12px;">用手机扫描二维码，或直接复制链接发到微信打开，即可同步全部数据。</p>
+    <div id="sync-qr-container" style="text-align:center;margin-bottom:10px;"></div>
+    <input type="text" id="sync-url" readonly style="font-size:11px;background:#f5f5f5;padding:8px;word-break:break-all;" onclick="this.select();document.execCommand('copy');alert('✅ 已复制到剪贴板！')" value="">
+    <p style="font-size:11px;color:#999;margin-top:6px;">提示：数据更新后需重新生成链接</p>
+    <div style="text-align:center;margin-top:12px;"><button class="btn-sm" onclick="document.getElementById('sync-modal').classList.add('hidden')">关闭</button></div>
   </div>
 </div>
 
@@ -884,6 +898,33 @@ function resetData() {
   localStorage.removeItem('h5_shop_stats');
   alert('✅ 已恢复初始数据');
   loadAllAdmin();
+}
+
+// ============ 同步到手机 ============
+function syncToPhone() {
+  var data = DB.exportAll();
+  var json = JSON.stringify(data);
+  // UTF-8 safe base64
+  var base64 = btoa(unescape(encodeURIComponent(json)));
+  // 使用hash传递数据，避免URL长度限制
+  var syncUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html') + '#sync=' + base64;
+  // 如果当前域名是临时预览站，则使用正式站域名
+  if (syncUrl.indexOf('app.codebuddy.work') > -1 || syncUrl.indexOf('localhost') > -1) {
+    syncUrl = 'https://wanglincooker.pages.dev/#sync=' + base64;
+  }
+  
+  document.getElementById('sync-url').value = syncUrl;
+  
+  // 生成二维码（数据太大时可能生成失败，只显示链接）
+  var qrContainer = document.getElementById('sync-qr-container');
+  var urlLen = syncUrl.length;
+  if (urlLen < 3000) {
+    qrContainer.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(syncUrl) + '" style="max-width:200px;border-radius:8px;" onerror="this.style.display=\'none\'">';
+  } else {
+    qrContainer.innerHTML = '<p style="font-size:12px;color:#e74c1f;">数据量较大（' + (urlLen/1024).toFixed(1) + 'KB），请复制下方链接发送到微信打开</p>';
+  }
+  
+  document.getElementById('sync-modal').classList.remove('hidden');
 }
 </script>
 </body>

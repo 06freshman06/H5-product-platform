@@ -64,10 +64,31 @@ const DB = {
     localStorage.setItem('h5_shop_' + key, JSON.stringify(value));
   },
 
-  // 获取配置
+  // 数据版本（升级时自动迁移旧缓存）
+  DATA_VERSION: 2,
+
+  // 获取配置（自动迁移旧版本数据）
   getConfig() {
     const saved = localStorage.getItem('h5_shop_config');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const config = JSON.parse(saved);
+      // 迁移：旧版 heroBgImage 单图 → 新版 heroBgs 多图数组
+      if (config.heroBgImage !== undefined && !config.heroBgs) {
+        config.heroBgs = config.heroBgImage ? [config.heroBgImage] : [];
+        delete config.heroBgImage;
+        this.setConfig(config);
+      }
+      // 迁移：旧版分类"灶具" → "商用灶具"
+      const products = JSON.parse(localStorage.getItem('h5_shop_products') || 'null');
+      if (products && products.length > 0) {
+        let migrated = false;
+        products.forEach(p => {
+          if (p.category === '灶具') { p.category = '商用灶具'; migrated = true; }
+        });
+        if (migrated) localStorage.setItem('h5_shop_products', JSON.stringify(products));
+      }
+      return config;
+    }
     this.setConfig(this.config);
     return this.config;
   },
